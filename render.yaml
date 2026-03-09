@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: nestjs-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    autoDeploy: true   # tự deploy khi push code lên GitHub
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000    # Render dùng port 10000 mặc định
+      # Các biến còn lại điền tay trong Render Dashboard
+      # JWT_SECRET, SUPABASE_URL, CLOUDINARY_*, RESEND_*, ...
