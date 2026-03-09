@@ -65,21 +65,30 @@ async function bootstrap() {
   );
 
   // ─── Swagger Docs ─────────────────────────────────────
-  if (process.env.NODE_ENV !== 'production') {
-    const config = new DocumentBuilder()
-      .setTitle('NestJS API')
-      .setDescription('API Documentation')
-      .setVersion('1.0')
-      .addBearerAuth(
-        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-        'JWT',
-      )
-      .build();
+  // Swagger luôn bật để dùng được trên cả production (Render)
+  // Nếu muốn tắt Swagger trên production thì đổi điều kiện:
+  //   if (process.env.NODE_ENV !== 'production') { ... }
+  const serverUrl = process.env.SERVER_URL || `http://localhost:${process.env.PORT || 8000}`;
 
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api/docs', app, document);
-    console.log(`📚 Swagger Docs: http://localhost:${process.env.PORT || 3000}/api/docs`);
-  }
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('NestJS API')
+    .setDescription('API Documentation')
+    .setVersion('1.0')
+    // Khai báo đúng URL server — quan trọng khi dùng Swagger trên production
+    .addServer(serverUrl, process.env.NODE_ENV === 'production' ? 'Production (Render)' : 'Local')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'JWT',
+    )
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true, // giữ token sau khi reload trang Swagger
+    },
+  });
+  console.log(`📚 Swagger Docs: ${serverUrl}/api/docs`);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

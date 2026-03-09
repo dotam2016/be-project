@@ -5,11 +5,14 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
     healthCheckPath: /api/health
-    autoDeploy: true   # tự deploy khi push code lên GitHub
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000    # Render dùng port 10000 mặc định
-      # Các biến còn lại điền tay trong Render Dashboard
-      # JWT_SECRET, SUPABASE_URL, CLOUDINARY_*, RESEND_*, ...
+        value: 10000
+      # SERVER_URL: URL public của app trên Render
+      # Render sẽ cấp URL dạng https://your-app.onrender.com
+      # Điền vào Render Dashboard sau khi deploy lần đầu
+      # - key: SERVER_URL
+      #   value: https://your-app.onrender.com
