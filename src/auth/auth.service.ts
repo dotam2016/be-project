@@ -31,7 +31,13 @@ export class AuthService {
   // ─── Đăng ký ─────────────────────────────────────────
   async register(registerDto: RegisterDto, meta?: { ip?: string; userAgent?: string }) {
     const user = await this.usersService.create(registerDto);
-    await this.emailService.sendWelcomeEmail(user.email, user.username);
+
+    // Email lỗi KHÔNG làm fail việc tạo tài khoản
+    try {
+      await this.emailService.sendWelcomeEmail(user.email, user.username);
+    } catch (emailError) {
+      this.logger.warn(`⚠️ Gửi welcome email thất bại cho ${user.email}: ${emailError.message}`);
+    }
 
     const tokens = await this.generateTokenPair(user.id, user.email);
     await this.storeRefreshToken(user.id, tokens.refreshToken, {
@@ -165,7 +171,12 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
     await this.usersService.saveResetToken(user.email, resetToken, expiresAt);
-    await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+
+    try {
+      await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+    } catch (emailError) {
+      this.logger.warn(`⚠️ Gửi reset email thất bại cho ${user.email}: ${emailError.message}`);
+    }
 
     return { message: 'Nếu email tồn tại, bạn sẽ nhận được hướng dẫn qua email' };
   }

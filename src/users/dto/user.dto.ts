@@ -33,3 +33,24 @@ export class UpdateUserDto {
   @IsString()
   bio?: string;
 }
+
+export class SetPasswordDto {
+  @ApiProperty({
+    example: 'NewPassword123!',
+    description: 'Mật khẩu mới — dùng cho tài khoản đăng ký qua Google/GitHub muốn thêm đăng nhập bằng email',
+  })
+  @IsString()
+  @MinLength(6, { message: 'Mật khẩu phải có ít nhất 6 ký tự' })
+  newPassword: string;
+}
+
+export class ChangePasswordDto {
+  @ApiProperty({ example: 'OldPassword123!', description: 'Mật khẩu hiện tại' })
+  @IsString()
+  currentPassword: string;
+
+  @ApiProperty({ example: 'NewPassword123!', description: 'Mật khẩu mới' })
+  @IsString()
+  @MinLength(6, { message: 'Mật khẩu mới phải có ít nhất 6 ký tự' })
+  newPassword: string;
+}

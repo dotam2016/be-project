@@ -279,6 +279,68 @@ export class UsersService {
       .eq('id', id);
   }
 
+
+  // ─── Thêm mật khẩu cho tài khoản OAuth ──────────────
+  // Dùng khi user đăng ký qua Google/GitHub muốn thêm đăng nhập bằng email+password
+  async setPassword(userId: string, newPassword: string) {
+    const user = await this.findById(userId);
+
+    // Lấy thêm field password để kiểm tra
+    const { data: fullUser } = await this.supabase
+      .from(this.TABLE)
+      .select('password')
+      .eq('id', userId)
+      .single();
+
+    if (fullUser?.password) {
+      throw new Error('Tài khoản đã có mật khẩu. Dùng API đổi mật khẩu thay thế.');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.supabase
+      .from(this.TABLE)
+      .update({ password: hashedPassword, updated_at: new Date().toISOString() })
+      .eq('id', userId);
+
+    return { message: 'Đã thêm mật khẩu. Bạn có thể đăng nhập bằng email và mật khẩu này.' };
+  }
+
+  // ─── Đổi mật khẩu (đã có mật khẩu cũ) ───────────────
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const { data: user } = await this.supabase
+      .from(this.TABLE)
+      .select('password')
+      .eq('id', userId)
+      .single();
+
+    if (!user?.password) {
+      throw new Error('Tài khoản chưa có mật khẩu. Dùng API set-password thay thế.');
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw new Error('Mật khẩu hiện tại không đúng');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.supabase
+      .from(this.TABLE)
+      .update({ password: hashedPassword, updated_at: new Date().toISOString() })
+      .eq('id', userId);
+
+    return { message: 'Đổi mật khẩu thành công' };
+  }
+
+  // ─── Kiểm tra tài khoản đã có mật khẩu chưa ─────────
+  async hasPassword(userId: string): Promise<boolean> {
+    const { data } = await this.supabase
+      .from(this.TABLE)
+      .select('password')
+      .eq('id', userId)
+      .single();
+    return !!data?.password;
+  }
+
   // ─── Helper: tạo username unique ─────────────────────
   private async generateUniqueUsername(base: string): Promise<string> {
     let username = base.toLowerCase().replace(/[^a-z0-9]/g, '');
